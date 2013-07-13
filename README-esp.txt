@@ -2,6 +2,7 @@ The BluePov driver for PC
 -------------------------
 
 Contenidos:
+a. Dependencias
 1. Funcionamiento
 2. Funciones
     2.1 Comandos
@@ -11,6 +12,26 @@ Contenidos:
 3. Paquetes
     3.1 Token (TKN)
 
+a. Dependencias
+
+    . Python 3
+    . Numpy - python3-numpy
+    . Pygame - from source        ?
+        - python3-dev
+        - ffmpeg
+        - libsdl1.2-dev
+        - libsdl-image1.2-dev
+        - libavcodec-dev
+        - libavformat-dev
+        - libswscale-dev
+        - libportmidi-dev
+        - libsdl-ttf2.0-dev
+        - libsmpeg-dev
+        - libfreetype6-dev
+        - libsdl-mixer1.2-dev
+        - libsdl-pango-dev
+        - libjpeg-dev
+        - libpng12-dev
 
 
 1. Funcionamiento
@@ -19,8 +40,13 @@ Luego de establecer una coneccion con el dispositivo permite transmitir datos y 
 
 La comunicacion se realiza por medio de paquetes, que seguiran siempre el esquema
 
-TOKEN->DATA->ACK
-  m     m     s       Master/Slave
+Enviado (master):
+        TOKEN->DATA
+len:     1 B   n B
+
+Respuesta (slave):
+        ACK
+len:    2 B
 
     El Token llevara el codigo de operacion. (1 byte)
 
@@ -48,7 +74,7 @@ Get Height: Altura actual de la pantalla
 
 Get Width: Ancho actual de la pantalla
 
-Get Depht: Profundidad de color actual.
+Get Depth: Profundidad de color actual.
 
 Get Total Width: Cantidad de columnas en todo el circulo.
 
@@ -62,7 +88,7 @@ Set Height: Altura de la pantalla
 
 Set Width: Ancho de la pantalla
 
-Set Depht: Profundidad de color.
+Set Depth: Profundidad de color.
 
 Set Total Width: Cantidad de columnas en todo el circulo (Varia el ancho del pixel).
 
@@ -95,14 +121,14 @@ Contiene el codigo de operacion a realizar, longitud de 1 byte.
 0x01 Leer velocidad
 0x04 Get height
 0x05 Get width
-0x06 Get depht
+0x06 Get depth
 0x07 Get total width
 
 0x10 Store
 0x11 Clean
 0x14 Set height
 0x15 Set width
-0x16 Set depht
+0x16 Set depth
 0x17 Set total width
 
 0x80 Write column
