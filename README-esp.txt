@@ -1,6 +1,8 @@
 The BluePov driver for PC
 -------------------------
 
+b = driver.BluePov("70:05:14:CE:65:11",(16,8))
+
 Contenidos:
 a. Dependencias
 1. Funcionamiento
@@ -32,6 +34,12 @@ a. Dependencias
         - libsdl-pango-dev
         - libjpeg-dev
         - libpng12-dev
+
+b. Todo
+
+- Separate bluetooth.connect
+- Detect disconnection
+- Set screen X-offset
 
 
 1. Funcionamiento
@@ -68,7 +76,7 @@ Divididos a su vez en lectura y escritura.
 
 Ping: Responde con la misma data que se mando si el dispositivo esta operativo.
 
-Velocidad: Devuelve las revoluciones por segundo del motor.
+Velocidad / fps: Devuelve las revoluciones por segundo del motor.
 
 Get Height: Altura actual de la pantalla
 
@@ -100,7 +108,7 @@ Write column: Actualiza una columna,
 
 Write section: Actualiza un grupo de columnas,
     1er byte de data: Direccion horizontal de inicio.
-    2do byte de data: Direccion horizontal final.
+    2do byte de data: Cantidad de columnas.
     Luego: Datos
 
 Burst: Envia toda la pantalla, columna por columna, secuencialmente.
@@ -118,7 +126,7 @@ Contiene el codigo de operacion a realizar, longitud de 1 byte.
 3.1.1 Codigos de operacion
 
 0x00 Ping
-0x01 Leer velocidad
+0x01 Leer velocidad / fps
 0x04 Get height
 0x05 Get width
 0x06 Get depth
@@ -147,10 +155,12 @@ Longitud variable segun la operacion, contiene los datos necesarios para realiza
 Valores especiales:
 
 0xffff Sin errores
-0xfff. Error (Y codigo de error)
+0xff.. Error (Y codigo de error)
 
 3.3.1 Errores
 
 0xff00 Error en el codigo de operacion
 0xfff1 Datos invalidos / fuera de rango
 0xfff2 Motor detenido
+
+
