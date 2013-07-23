@@ -9,7 +9,7 @@ pygame.display.set_mode((x,y))
 
 s = pygame.display.get_surface()
 
-driver = bluePoV.Driver([x,y],1)
+driver = bluePoV.Driver([x,y],depth=1,asServer=True)
 
 #driver.connect(MAC)
 
