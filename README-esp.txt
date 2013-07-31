@@ -16,9 +16,9 @@ a. Dependencias
 
 a. Dependencias
 
-    . Python 3
+    . Python 2/3
     . Numpy - python3-numpy
-    . Pygame - from source        ?
+    . Pygame - from source
         - python3-dev
         - ffmpeg
         - libsdl1.2-dev
@@ -34,6 +34,11 @@ a. Dependencias
         - libsdl-pango-dev
         - libjpeg-dev
         - libpng12-dev
+
+    Comunicaciones:
+        py3 - Bluetooth nativo
+        py2 - Pybluez
+        py2/3 - Pyserial - python-serial
 
 b. Todo
 
