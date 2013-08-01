@@ -37,12 +37,15 @@ except importException:
 finally:
     SERIAL_AVAILABLE = True
 
+import warnings
+if 1 or not SERIAL_AVAILABLE and not BLUETOOTH_AVAILABLE:
+    warnings.warn("Serial and bluetooth are not available",RuntimeWarning)
 
 class BaseSocket(object):
     """
     Banana banana banana
     """
-    def __init__(self, arg):
+    def __init__(self):
         super(BaseSocket, self).__init__()
 
     def connect(self):
@@ -73,7 +76,7 @@ class BluetoothSocket(BaseSocket):
     """
     Banana banana banana
     """
-    def __init__(self, arg):
+    def __init__(self):
         super(BluetoothSocket, self).__init__()
 
         self.connected = False
@@ -83,7 +86,7 @@ class BluetoothSocket(BaseSocket):
 
     def connect(self, MACaddr, asServer=False, port=3, timeout=1):
         if not BLUETOOTH_AVAILABLE:
-            raise Exception("Bluetooth is not available")
+            raise RuntimeError("Bluetooth is not available")
         self.params = [MACaddr,asServer,port,timeout]
 
         self.close()
@@ -132,9 +135,18 @@ class BluetoothSocket(BaseSocket):
     def isConnected(self):
         return self.connected
 
-    def send(self,data):
+    def send(self,r):
+        if type(r) == bytes:
+            pass
+        elif type(r) == int:
+            r = bytes([r&0xff])
+        elif type(r) == list:
+            r = bytes(r)
+        elif type(r) == str:
+            r = bytes(r,'ascii')
+
         try:
-            return self.socket.send(byte(data))
+            return self.socket.send(r)
         except socket.timeout:
             self.connected = False
             return None
@@ -152,15 +164,15 @@ class SerialSocket(BaseSocket):
     """
     Banana banana banana
     """
-    def __init__(self, arg):
-        super(BluetoothSocket, self).__init__()
+    def __init__(self):
+        super(SerialSocket, self).__init__()
 
         self.socket = None
         self.params = []
 
     def connect(self,port,bauds=9600,bytesize=8,parity='N',stopbits=1,timeout=1):
         if not SERIAL_AVAILABLE:
-            raise Exception("Serial is not available")
+            raise RuntimeError("Serial is not available")
         self.params = [port,bauds,bytesize,parity,stopbits,timeout]
         self.close()
         self.socket = serial.Serial(port,bauds,bytesize,parity,stopbits,timeout)
@@ -182,9 +194,18 @@ class SerialSocket(BaseSocket):
             return False
 
     def send(self,r):
+        if type(r) == bytes:
+            pass
+        elif type(r) == int:
+            r = bytes([r&0xff])
+        elif type(r) == list:
+            r = bytes(r)
+        elif type(r) == str:
+            r = bytes(r,'ascii')
+
         try:
-            return self.socket.write(byte(r)) # Catch exception?
-        except Exception:
+            return self.socket.write(r)
+        except serial.SerialTimeoutException:
             return None
 
     def recv(self):

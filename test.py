@@ -1,21 +1,26 @@
 import bluePoV
 import pygame
 
+if not bluePoV.PY3:
+    input = raw_input
+
 x,y = (16,16)
-MAC = "00:13:03:18:04:60"
+port = "/dev/ttyACM1"
 
-pygame.init()
-pygame.display.set_mode((x,y))
+sckt = bluePoV.SerialSocket()
 
-s = pygame.display.get_surface()
+sckt.connect(port,9600)
 
-driver = bluePoV.Driver([x,y],depth=1,asServer=False)
+driver = bluePoV.Driver(sckt,[x,y],depth=1)
 
-driver.connect(MAC)
+# pygame.init()
+# pygame.display.set_mode((x,y))
 
-s.fill([0,255,0])
+# disp = pygame.display.get_surface()
 
-driver.blit(s)
-pygame.display.flip()
+# disp.fill([0,255,0])
+
+# driver.blit(disp)
+# pygame.display.flip()
 
 input("Press any key... ")
