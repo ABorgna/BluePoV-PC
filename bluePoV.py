@@ -5,16 +5,21 @@
 #
 
 #
-# Todo esta detallado en 'README-esp.txt'.
+# Explicacion en 'README-esp.txt'.
 #
 #
 # Los paquetes son listas con n items, n >= 2;
-#     1er valor:  TKN - int
+#     1er valor:  FUNC - int
 #     siguientes: DATA - int || list || NumpyArray_t
 
 # Includes
 
+from sys import version_info as SYS_V_INFO
+if SYS_V_INFO[0] == 3: PY3 = True
+SYS_V_INFO = None
+
 from sockets import *
+import constants as const
 
 if PY3:
     import queue
@@ -23,10 +28,13 @@ else:
 
 import threading
 from pygame import Surface,surfarray
-#import numpy
-from numpy import ndarray as NumpyArray_t
+import numpy as np
+#from numpy import ndarray as NumpyArray_t
 from time import sleep
+from warnings import warn
+from sys import stderr
 
+import encoderSrc.encoder as encoder
 
 class ResponseError(Exception):
     pass
@@ -34,6 +42,8 @@ class BadResponseError(ResponseError):
     pass
 class NullResponseError(ResponseError):
     pass
+
+
 
 
 class Driver(object):
@@ -49,7 +59,7 @@ class Driver(object):
 
         # The array buffer
         if res[1] % 8:
-            raise ValueError("The display height must be a multiple of 2")
+            raise ValueError("The display height must be a multiple of 8")
         #self.buffer = NumpyArray_t.(shape = (shape=(res[1],res[0]),dtype=numpy.int8)
         self.buffer = Surface(res)
 
@@ -62,11 +72,14 @@ class Driver(object):
         self.setResolution(res)
         self.setDepth(depth)
 
-    def _send(self,packet,errorStr,retries=5):
+    def _send(self,packet,errorStr="Transmission error",retries=0):
         """
-        Sends the packet,
-        waits for a valid response
+        Sends the packet
         and checks the response for error codes (0xff00-0xfffe)
+        Response:
+            >= 0 - Response
+             < 0 - Error
+            None - No response
         """
         if retries >= 0:
             retries += 1
@@ -76,10 +89,12 @@ class Driver(object):
             r = self.transmitter.recv()
             if r == None:
                 if not retries:
-                    raise NullResponseError(errorStr+", couldn't get response")
+                    warn(errorStr+", couldn't get response",UserWarning)
+                    return None
             elif 0xffff > r >= 0xff00:
-                raise BadResponseError(errorStr+", {:#x}".format(r))
-            else
+                warn(errorStr+", {:#x}".format(r),UserWarning)
+                return -r
+            else:
                 return r
 
     def _send_noRcv(self,packet):
@@ -92,26 +107,26 @@ class Driver(object):
     # Special commands
 
     def ping(self):
-        r = self._send((0x10,0x55),"Error when pinging")
+        r = self._send((const.PING|const.GET,0x55),"Error when pinging")
         return r == 0x55
 
     def store(self):
-        self._send((0x10),"Error storing the display in ROM")
+        self._send((const.STORE|const.SET),"Error storing the display in ROM")
 
     def clean(self):
-        self._send((0x11),"Error cleaning the display")
+        self._send((const.CLEAN|const.SET),"Error cleaning the display")
 
     # Variable setters
 
     def setResolution(self,res):
         if res[1] % 8:
-            raise ValueError("The display height must be a multiple of 2")
+            raise ValueError("The display height must be a multiple of 8")
 
         self.transmitter.txJoin()
         # Height
-        self._send((0x14,res[1]),"Error setting the resolution")
+        self._send((const.HEIGHT|const.SET,res[1]),"Error setting the resolution")
         # Width
-        self._send((0x15,res[0]),"Error setting the resolution")
+        self._send((const.WIDTH|const.SET,res[0]),"Error setting the resolution")
 
         # Resizes the buffer
         buffer = Surface(res)
@@ -120,43 +135,50 @@ class Driver(object):
 
     def setDepth(self,depth):
         self.transmitter.txJoin()
-        self._send((0x16,depth),"Error setting the depth")
-        self.transmitter.depth = depth
+        self._send((const.DEPTH|const.SET,depth),"Error setting the depth")
 
     def setTotalWidth(self,width):
-        self._send((0x17,width),"Error setting the total width")
+        self._send((const.TOTAL_WIDTH|const.SET,width),"Error setting the total width")
 
     # Variable getters
 
     def getFPS(self):
-        return self._send((0x01),"Error getting the fps")
+        return self._send((const.FPS|const.GET),"Error getting the fps")
 
     def getResolution(self):
         # Height
-        h = self._send((0x04),"Error getting the resolution")
+        h = self._send((const.HEIGHT|const.GET),"Error getting the resolution")
         # Width
-        w =self._send((0x05),"Error getting the resolution")
+        w =self._send((const.WIDTH|const.GET),"Error getting the resolution")
         return (w,h)
 
     def getDepth(self):
-        return self._send((0x06),"Error getting the depth")
+        return self._send((const.DEPTH|const.GET),"Error getting the depth")
 
     def getTotalWidth(self):
-        return self._send((0x07),"Error getting the total width")
+        return self._send((const.TOTAL_WIDTH|const.GET),"Error getting the total width")
 
     # Data writers
     def blit(self,surface):
-        self.buffer.blit(surface,(0,0))
-        self._send_noRcv([0x83,surfarray.pixels3d(self.buffer)])
+        if not self.buffer.get_locked():
+            self.buffer.blit(surface,(0,0))
+            self._send_noRcv([const.INTERLACED_BURST|const.DATA,
+                              surfarray.pixels3d(self.buffer)])
 
     def blitColumn(self,surface,pos):
-        self.buffer.blit(surface,(pos,0))
-        self._send_noRcv([0x80,pos,surfarray.pixels3d(self.buffer)[pos:pos+1]])
+        if not self.buffer.get_locked():
+            self.buffer.blit(surface,(pos,0))
+            self._send_noRcv([const.WRITE_COLUMN|const.DATA,
+                             pos,
+                             surfarray.pixels3d(self.buffer)[pos:pos+1]])
 
     def blitSection(self,surface,pos,lenght):
-        self.buffer.blit(surface,(pos,0))
-        self._send_noRcv([0x81,pos,lenght,surfarray.pixels3d(self.buffer)[pos:pos+lenght]])
-
+        if not self.buffer.get_locked():
+            self.buffer.blit(surface,(pos,0))
+            self._send_noRcv([const.WRITE_SECTION|const.DATA,
+                              pos,
+                              lenght,
+                              surfarray.pixels3d(self.buffer)[pos:pos+lenght]])
 
 
 
@@ -208,68 +230,26 @@ class Transmitter ( threading.Thread ):
         """
         Processes all the communication with the device
         """
-        InterlacedTxOPCODE = 0x83
 
         while True:
-
-            count = 0
+            # Check if connected, retry and warn every 1s
+            tries = 1/self.socket.timeout
             while not self.socket.isConnected():
                 self.socket.reconnect()
                 sleep(0.1)
-                count += 1
-                if count > 32:
-                    count = 0
-                    print("There seems to be a problem in the connection...")
+                tries -= 1
+                if not tries:
+                    tries = 1/self.socket.timeout
+                    stderr.write("BluePoV not responding...")
 
-            packet = self.outQ.get(block=True)
+            # Wait for tasks
+            task = self.outQ.get(block=True)
 
-            # Token
-            self.socket.send(packet[0]&0xFF)
+            # Send everithing
+            self._sendData(task)
 
-            # Data
-            for pktI in range (1,len(packet)):
-                if type(packet[pktI]) == NumpyArray_t:
-
-                    if packet[pktI].ndim not in (2,3):
-                        # The dimensions are leaking!
-                        raise ValueError("Wrong number of array dimensions")
-
-                    # Interlaced transmission
-                    if packet[0] == InterlacedTxOPCODE:
-                        xrang = list(range(0,len(packet[pktI])),2)
-                        xrang += list(range(1,len(packet[pktI])),2)
-                    else:
-                        xrang = range(len(packet[pktI]))
-
-                    # Prevent the depth from being changed while transmitting
-                    depth = self.depth
-
-                    for x in xrang:
-                        for y in range(0,len(packet[pktI][0]),8):
-
-                            for dep in range(depth):
-                                mask = 0x80 >> dep
-
-                                for color in range(3):
-                                    if packet[pktI].ndim == 3:
-                                        # Each color in separated arrays
-                                        msg = 0
-                                        for shift in range(8):
-                                            msg |= (packet[pktI][x][y+shift][color] & mask) \
-                                                    >> shift - dep
-                                        self.socket.send(msg)
-
-                                    else:
-                                        # All the colors in the same int
-                                        # Assuming 32-bit numbers
-                                        msg = 0
-                                        for shift in range(8):
-                                            msg |= (packet[pktI][x][y+shift] & mask) \
-                                                    >> shift - dep + color*8 + 8
-                                        self.socket.send(msg)
-                else:
-                    # A number, a list or a string
-                    self.socket.send(packet[pktI])
+            # Frees the references
+            task = ()
 
             # ACK
             response = None
@@ -283,3 +263,88 @@ class Transmitter ( threading.Thread ):
 
             # Mark as done and wait another
             self.outQ.task_done()
+
+
+    def _sendData(self,task):
+        # Send the appropriated bytes
+
+        # Token
+        token = task[0] & 0xff
+        if token & const.DATA:
+            token |= const.PRECODED
+        self.socket.send(token)
+
+        # Data
+
+        # Special
+        if task[0] == const.PING|const.GET:
+            self.socket.send(task[1])
+        elif task[0] == const.STORE|const.SET:
+            pass
+        elif task[0] == const.CLEAN|const.SET:
+            pass
+        # Setters
+        elif task[0] == const.HEIGHT|const.SET:
+            self.socket.send(task[1] >> 8)
+            self.socket.send(task[1])
+        elif task[0] == const.WIDTH|const.SET:
+            self.socket.send(task[1] >> 8)
+            self.socket.send(task[1])
+        elif task[0] == const.DEPTH|const.SET:
+            self.depth = task[1]
+            self.socket.send(task[1])
+        elif task[0] == const.TOTAL_WIDTH|const.SET:
+            self.socket.send(task[1] >> 8)
+            self.socket.send(task[1])
+        # Getters
+        elif task[0] == const.FPS|const.GET:
+            pass
+        elif task[0] == const.HEIGHT|const.GET:
+            self.socket.send(task[1] >> 8)
+            self.socket.send(task[1])
+        elif task[0] == const.WIDTH|const.GET:
+            self.socket.send(task[1] >> 8)
+            self.socket.send(task[1])
+        elif task[0] == const.DEPTH|const.GET:
+            self.socket.send(task[1])
+        elif task[0] == const.TOTAL_WIDTH|const.GET:
+            self.socket.send(task[1] >> 8)
+            self.socket.send(task[1])
+        # Data
+        elif task[0] == const.INTERLACED_BURST|const.DATA:
+            # Encode the data
+
+            frame = self._arrangePixels(task[1],interlaced=True)
+
+            print("Sending data...")
+            # self.socket.send(frame)
+            print("done")
+        elif task[0] == const.WRITE_COLUMN|const.DATA:
+            # Send column number
+            self.socket.send(task[1])
+            # Encode the data
+            frame = self._arrangePixels(task[2])
+            self.socket.send(frame)
+        elif task[0] == const.WRITE_SECTION|const.DATA:
+            # Send first column number
+            self.socket.send(task[1])
+            # Send section lenght
+            self.socket.send(task[2])
+            # Encode the data
+            frame = self._arrangePixels(task[3],lenght=task[2])
+            self.socket.send(frame)
+
+    def _arrangePixels(self,array,lenght = 0, interlaced = False):
+
+        if array.ndim not in (2,3):
+            # Bad number of array dimensions
+            raise ValueError("The dimensions are leaking!")
+
+        # msg = np.array(array.flatten(),dtype=np.uint8,copy=True,order='C')
+        msg = array.flatten()
+        respLen = len(msg/8)
+        resp = np.empty((respLen),dtype=np.uint8)
+
+        encoder.encode_func(msg,resp)
+
+        return resp

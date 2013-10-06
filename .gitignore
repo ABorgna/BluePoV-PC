@@ -1,0 +1,13 @@
+__pycache__/*
+cosTest/*
+serial/*
+*/build/*
+
+*.out
+*.pyc
+*.sublime-*
+*.so
+
+uC.cpp
+*/_encoder.c
+

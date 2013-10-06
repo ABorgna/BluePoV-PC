@@ -16,30 +16,27 @@ SYS_V_INFO = None
 if PY3:
     try:
         from socket import AF_BLUETOOTH
-    except importException:
-        pass
-    finally:
         AF_BLUETOOTH = None
         import socket
         BLUETOOTH_AVAILABLE = True
+    except ImportError:
+        pass
 else:
     try:
         import bluetooth
-    except importException:
-        pass
-    finally:
         BLUETOOTH_AVAILABLE = True
+    except ImportError:
+        pass
 
 try:
     import serial
-except importException:
-    pass
-finally:
     SERIAL_AVAILABLE = True
+except ImportError:
+    pass
 
-import warnings
-if 1 or not SERIAL_AVAILABLE and not BLUETOOTH_AVAILABLE:
-    warnings.warn("Serial and bluetooth are not available",RuntimeWarning)
+from warnings import warn
+if not SERIAL_AVAILABLE and not BLUETOOTH_AVAILABLE:
+    warn("Serial and bluetooth are not available",RuntimeWarning)
 
 class BaseSocket(object):
     """
@@ -47,6 +44,7 @@ class BaseSocket(object):
     """
     def __init__(self):
         super(BaseSocket, self).__init__()
+        self.timeout = None
 
     def connect(self):
         pass
@@ -82,12 +80,12 @@ class BluetoothSocket(BaseSocket):
         self.connected = False
         self.svSocket = None
         self.socket = None
-        self.params = []
+        self.params = ()
 
-    def connect(self, MACaddr, asServer=False, port=3, timeout=1):
+    def connect(self, MACaddr, asServer=False, port=3, timeout=0.1):
         if not BLUETOOTH_AVAILABLE:
             raise RuntimeError("Bluetooth is not available")
-        self.params = [MACaddr,asServer,port,timeout]
+        self.params = (MACaddr,asServer,port,timeout)
 
         self.close()
         self.asServer = asServer
@@ -112,6 +110,7 @@ class BluetoothSocket(BaseSocket):
             self.socket.connect((MACaddr,port))
 
         self.socket.settimeout(timeout)
+        self.timeout = timeout
         self.connected = True
 
     def reconnect(self):
@@ -139,11 +138,17 @@ class BluetoothSocket(BaseSocket):
         if type(r) == bytes:
             pass
         elif type(r) == int:
+            # r = bytes(chr(r&0xff),'utf-8')
             r = bytes([r&0xff])
         elif type(r) == list:
             r = bytes(r)
         elif type(r) == str:
             r = bytes(r,'ascii')
+        else:
+            raise RuntimeError( "Serial data not supportted \n"
+                                +"    Type: "+str(type(r))+"\n"
+                                +"    Value: "+str(r)
+                               )
 
         try:
             return self.socket.send(r)
@@ -168,19 +173,22 @@ class SerialSocket(BaseSocket):
         super(SerialSocket, self).__init__()
 
         self.socket = None
-        self.params = []
+        self.params = ()
 
-    def connect(self,port,bauds=9600,bytesize=8,parity='N',stopbits=1,timeout=1):
+    def connect(self,port,bauds=9600,bytesize=8,parity='N',stopbits=1,timeout=0.01):
         if not SERIAL_AVAILABLE:
             raise RuntimeError("Serial is not available")
-        self.params = [port,bauds,bytesize,parity,stopbits,timeout]
+        self.params = (port,bauds,bytesize,parity,stopbits,timeout)
         self.close()
         self.socket = serial.Serial(port,bauds,bytesize,parity,stopbits,timeout)
+        self.timeout = timeout
 
     def reconnect(self):
         if self.params:
             p = self.params
             self.connect(p[0],p[1],p[2],p[3],p[4],p[5])
+        else:
+            raise RuntimeError("Serial port not initialized")
 
     def close(self):
         if not self.isConnected():
@@ -197,11 +205,17 @@ class SerialSocket(BaseSocket):
         if type(r) == bytes:
             pass
         elif type(r) == int:
+            # r = bytes(chr(r&0xff),'utf-8')
             r = bytes([r&0xff])
         elif type(r) == list:
             r = bytes(r)
         elif type(r) == str:
             r = bytes(r,'ascii')
+        else:
+            raise RuntimeError( "Serial data not supportted \n"
+                                +"    Type: "+str(type(r))+"\n"
+                                +"    Value: "+str(r)
+                               )
 
         try:
             return self.socket.write(r)

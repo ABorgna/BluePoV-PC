@@ -45,6 +45,9 @@ b. Todo
 - Separate bluetooth.connect
 - Detect disconnection
 - Set screen X-offset
+  Cambiar nombre funcion encoder (sacar *_func)
+  Devolver bytes
+  Agregar opciones al encoder
 
 
 1. Funcionamiento
@@ -67,7 +70,9 @@ len:    2 B
 
     El ACK informa que el dispositivo recibio y ejecuto la operacion, y se devuelve el resultado de esta. (2 bytes)
 
-El la cantidad de pixeles se puede modificar dinamicamente, asi como la cantidad de colores y la densidad de columnas.
+    La trama termina cuando no hay comunicacion por mas de 100uS.
+
+La cantidad de pixeles se puede modificar dinamicamente, asi como la cantidad de colores y la densidad de columnas.
 
 2. Funciones
 
@@ -75,35 +80,35 @@ Dividimos en dos categorias, datos y comandos.
 
 2.1 Comandos
 
-Divididos a su vez en lectura y escritura.
+Divididos a su vez en lectura y escritura, bytes de data entre parentesis.
 
 2.1.1 Lectura
 
-Ping: Responde con la misma data que se mando si el dispositivo esta operativo.
+Ping: (1B) Responde con la misma data que se mando si el dispositivo esta operativo.
 
-Velocidad / fps: Devuelve las revoluciones por segundo del motor.
+Get fps: (0B) Devuelve las revoluciones por segundo del motor.
 
-Get Height: Altura actual de la pantalla
+Get Height: (0B) Altura actual de la pantalla
 
-Get Width: Ancho actual de la pantalla
+Get Width: (0B) Ancho actual de la pantalla
 
-Get Depth: Profundidad de color actual.
+Get Depth: (0B) Profundidad de color actual.
 
-Get Total Width: Cantidad de columnas en todo el circulo.
+Get Total Width: (0B) Cantidad de columnas en todo el circulo.
 
 2.1.2 Escritura
 
-Store: Guarda en ROM el contenido actual de la pantalla.
+Store: (0B) Guarda en ROM el contenido actual de la pantalla.
 
-Clean: Borra la pantalla. (Rellena con negro).
+Clean: (0B) Borra la pantalla. (Rellena con negro).
 
-Set Height: Altura de la pantalla
+Set Height: (2B) Altura de la pantalla
 
-Set Width: Ancho de la pantalla
+Set Width: (2B) Ancho de la pantalla
 
-Set Depth: Profundidad de color.
+Set Depth: (1B) Profundidad de color.
 
-Set Total Width: Cantidad de columnas en todo el circulo (Varia el ancho del pixel).
+Set Total Width: (2B) Cantidad de columnas en todo el circulo (Varia el ancho del pixel).
 
 2.2 Datos
 
@@ -126,12 +131,12 @@ Cada paquete se conforma de tres secciones; TKN, DATA, ACK.
 
 3.1 Token (TKN)
 
-Contiene el codigo de operacion a realizar, longitud de 1 byte.
+Contiene un byte, el codigo de operacion
 
-3.1.1 Codigos de operacion
+3.1.2 Codigos de operacion
 
 0x00 Ping
-0x01 Leer velocidad / fps
+0x01 Get fps
 0x04 Get height
 0x05 Get width
 0x06 Get depth
@@ -153,7 +158,7 @@ Contiene el codigo de operacion a realizar, longitud de 1 byte.
 
 Longitud variable segun la operacion, contiene los datos necesarios para realizarla.
 
-3.3 Token (TKN)
+3.3 Acknowledge (ACK)
 
 2 bytes de largo, contiene el resultado de la operacion.
 
