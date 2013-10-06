@@ -1,8 +1,6 @@
 The BluePov driver for PC
 -------------------------
 
-b = driver.BluePov("70:05:14:CE:65:11",(16,8))
-
 Contenidos:
 a. Dependencias
 1. Funcionamiento
@@ -18,6 +16,7 @@ a. Dependencias
 
     . Python 2/3
     . Numpy - python3-numpy
+    . Cython - cython / cython3
     . Pygame - from source
         - python3-dev
         - ffmpeg
