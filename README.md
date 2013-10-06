@@ -5,5 +5,5 @@ BluePoV is a persistence of vision display, just some leds rotating at ~2400rpm 
 
 This driver allows any program written in Python to send it a pixel matrix asynchronously, and configure some variables.
 
-The display, developed over 8 weeks, is the final project of the Argentinian Pio IX secondary school.
+The display, developed over 8 weeks, is the final project of Pio IX secondary school.
 
