@@ -4,8 +4,6 @@ import pygame
 if not bluePoV.PY3:
     input = raw_input
 
-import constants
-
 x,y = (480,64)
 #port = "/dev/ttyACM0"
 print ("Port? (default /dev/tty2)")
@@ -15,10 +13,10 @@ if not port:
 
 sckt = bluePoV.SerialSocket()
 
-sckt.connect(port,115200 )
+sckt.connect(port,115200)
 
-sckt.send("\r\nTesting\r\n")
-sckt.send(65)
+# sckt.send("\r\nTesting\r\n")
+# sckt.send(65)
 
 driver = bluePoV.Driver(sckt,[x,y],depth=1)
 

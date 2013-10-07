@@ -318,9 +318,7 @@ class Transmitter ( threading.Thread ):
 
             frame = self._arrangePixels(task[1],interlaced=True)
 
-            print("Sending data...")
-            # self.socket.send(frame)
-            print("done")
+            self.socket.send(frame)
         elif task[0] == const.WRITE_COLUMN|const.DATA:
             # Send column number
             self.socket.send(task[1])
@@ -348,4 +346,4 @@ class Transmitter ( threading.Thread ):
 
         encoder.encodeRGB3d(msg,resp,self.depth,self.height)
 
-        return resp
+        return resp.tolist()

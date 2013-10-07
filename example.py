@@ -45,6 +45,7 @@ while True:
     g += pG
     b += pB
 
+
     if 255 < r or r < 0 or 255 < g or g < 0 or 255 < b or b < 0:
         r = 255 if r >= 255 else 0
         g = 255 if g >= 255 else 0
