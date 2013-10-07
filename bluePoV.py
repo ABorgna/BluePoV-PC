@@ -340,11 +340,10 @@ class Transmitter ( threading.Thread ):
             # Bad number of array dimensions
             raise ValueError("The dimensions are leaking!")
 
-        # msg = np.array(array.flatten(),dtype=np.uint8,copy=True,order='C')
         msg = array.flatten()
-        respLen = len(msg/8)
+        respLen = int(len(msg)*self.depth/8)
         resp = np.empty((respLen),dtype=np.uint8)
 
-        encoder.encode_func(msg,resp)
+        encoder.encodeRGB3d(msg,resp,self.depth)
 
         return resp
