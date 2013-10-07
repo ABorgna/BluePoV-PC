@@ -196,6 +196,7 @@ class Transmitter ( threading.Thread ):
 
         # Status
         self.depth = 1          # bits per color
+        self.height = 64        # column height
 
         # Makes it stop when the program ends
         self.setDaemon(True)
@@ -285,6 +286,7 @@ class Transmitter ( threading.Thread ):
             pass
         # Setters
         elif task[0] == const.HEIGHT|const.SET:
+            self.height = task[1];
             self.socket.send(task[1] >> 8)
             self.socket.send(task[1])
         elif task[0] == const.WIDTH|const.SET:
@@ -344,6 +346,6 @@ class Transmitter ( threading.Thread ):
         respLen = int(len(msg)*self.depth/8)
         resp = np.empty((respLen),dtype=np.uint8)
 
-        encoder.encodeRGB3d(msg,resp,self.depth)
+        encoder.encodeRGB3d(msg,resp,self.depth,self.height)
 
         return resp
