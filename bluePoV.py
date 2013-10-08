@@ -21,7 +21,7 @@ from transmitter import *
 from pygame import Surface,surfarray
 import numpy as np
 #from numpy import ndarray as NumpyArray_t
-from warnings import warn
+from sys import stderr
 
 class ResponseError(Exception):
     pass
@@ -77,10 +77,10 @@ class Driver(object):
             r = self.transmitter.recv()
             if r == None:
                 if not retries:
-                    warn(errorStr+", couldn't get response",UserWarning)
+                    stderr.write(errorStr+", couldn't get response")
                     return None
             elif 0xffff > r >= 0xff00:
-                warn(errorStr+", {:#x}".format(r),UserWarning)
+                stderr.write(errorStr+", {:#x}".format(r))
                 return -r
             else:
                 return r
