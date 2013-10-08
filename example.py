@@ -1,6 +1,10 @@
 import pygame
 import bluePoV
 
+
+if not bluePoV.const.PY3:
+    input = raw_input
+
 # Varia el color regularmente
 x,y = (480,64)
 pendiente = 4

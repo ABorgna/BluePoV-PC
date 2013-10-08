@@ -18,17 +18,10 @@ import constants as const
 from sockets import *
 from transmitter import *
 
-if const.PY3:
-    import queue
-else:
-    import Queue as queue
-
 from pygame import Surface,surfarray
 import numpy as np
 #from numpy import ndarray as NumpyArray_t
 from warnings import warn
-
-import encoderSrc.encoder as encoder
 
 class ResponseError(Exception):
     pass
@@ -124,8 +117,8 @@ class Driver(object):
         self._send((const.WIDTH|const.SET,res[0]),"Error setting the resolution")
 
         # Resizes the buffer
-        buffer = Surface(res)
-        buffer.blit(self.buffer,(0,0))
+        buffer = np.empty((res[0],res[1],3),dtype=np.uint8)
+        buffer[0:len(self.buffer)] = self.buffer
         self.buffer = buffer
 
     def setDepth(self,depth):
@@ -161,7 +154,7 @@ class Driver(object):
         # Is there isn't already a burst task in the queue, create one
         if not self.transmitter.burstInQueue.isSet():
             self.transmitter.burstInQueue.set()
-            self._send_noRcv([const.INTERLACED_BURST|const.DATA, array])
+            self._send_noRcv([const.INTERLACED_BURST|const.DATA, self.buffer])
 
     def pgBlitColumn(self,surface,pos):
         # Copy the column to a numpy array

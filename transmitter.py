@@ -4,10 +4,18 @@
 # ~ ABorgna
 #
 
+import constants as const
+import encoderSrc.encoder as encoder
+
 import threading
 import numpy as np
 from sys import stderr
 from time import sleep
+
+if const.PY3:
+    import queue
+else:
+    import Queue as queue
 
 class Transmitter ( threading.Thread ):
     """"
@@ -21,7 +29,7 @@ class Transmitter ( threading.Thread ):
         self.height = 64        # column height
 
         # Image buffer, the data to transmit
-        self.buffer = np.empty((480*height*3),dtype=np.uint8)
+        self.buffer = np.empty((480*self.height*3),dtype=np.uint8)
 
         # Burst task already queued
         self.burstInQueue = threading.Event()
@@ -152,7 +160,7 @@ class Transmitter ( threading.Thread ):
             self.burstInQueue.clear()
 
             # Copy the matrix in the internal buffer, so its not modified while encoding
-            self.buffer = nd.copy(task[1].flatten())
+            self.buffer = np.copy(task[1].flatten())
 
             # Encode the data
             frame = self._arrangePixels(interlaced=True)
@@ -164,7 +172,7 @@ class Transmitter ( threading.Thread ):
             self.socket.send(task[1])
 
             # Copy the matrix in the internal buffer, so its not modified while encoding
-            self.buffer = nd.copy(task[2].flatten())
+            self.buffer = np.copy(task[2].flatten())
 
             # Encode the data
             frame = self._arrangePixels(lenght=1)
@@ -179,7 +187,7 @@ class Transmitter ( threading.Thread ):
             self.socket.send(task[2])
 
             # Copy the matrix in the internal buffer, so its not modified while encoding
-            self.buffer = nd.copy(task[3].flatten())
+            self.buffer = np.copy(task[3].flatten())
 
             # Encode the data
             frame = self._arrangePixels(lenght=task[2])
@@ -188,10 +196,6 @@ class Transmitter ( threading.Thread ):
             self.socket.send(frame)
 
     def _arrangePixels(self,lenght = 0, interlaced = False):
-
-        if array.ndim not in (2,3):
-            # Bad number of array dimensions
-            raise ValueError("The dimensions are leaking!")
 
         respLen = int(len(self.buffer)*self.depth/8)
         resp = np.empty((respLen),dtype=np.uint8)
