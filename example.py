@@ -58,7 +58,7 @@ while True:
 
     disp.fill([r,g,b])
 
-    driver.blit(disp)
+    driver.pgBlit(disp)
     pygame.display.flip()
 
 

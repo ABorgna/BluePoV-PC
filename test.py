@@ -1,7 +1,7 @@
 import bluePoV
 import pygame
 
-if not bluePoV.PY3:
+if not bluePoV.const.PY3:
     input = raw_input
 
 x,y = (480,64)
@@ -27,7 +27,7 @@ disp = pygame.display.get_surface()
 
 disp.fill([128,255,64])
 
-driver.blit(disp)
+driver.pgBlit(disp)
 pygame.display.flip()
 
 input()

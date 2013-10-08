@@ -14,26 +14,19 @@
 
 # Includes
 
-from sys import version_info as SYS_V_INFO
-if SYS_V_INFO[0] == 3: PY3 = True
-SYS_V_INFO = None
-
+import constants as const
 from sockets import *
 from transmitter import *
-import constants as const
 
-if PY3:
+if const.PY3:
     import queue
 else:
     import Queue as queue
 
-import threading
 from pygame import Surface,surfarray
 import numpy as np
 #from numpy import ndarray as NumpyArray_t
-from time import sleep
 from warnings import warn
-from sys import stderr
 
 import encoderSrc.encoder as encoder
 
@@ -61,8 +54,9 @@ class Driver(object):
         # The array buffer
         if res[1] % 8:
             raise ValueError("The display height must be a multiple of 8")
-        #self.buffer = NumpyArray_t.(shape = (shape=(res[1],res[0]),dtype=numpy.int8)
-        self.buffer = Surface(res)
+
+        # Image buffer, the data to transmit
+        self.buffer = np.empty((res[0],res[1],3),dtype=np.uint8)
 
         # Creates the transmitter and connects with the device
         self.transmitter = Transmitter(socket)
@@ -159,24 +153,29 @@ class Driver(object):
     def getTotalWidth(self):
         return self._send((const.TOTAL_WIDTH|const.GET),"Error getting the total width")
 
-    # Data writers
-    def blit(self,surface):
-        if not self.buffer.get_locked():
-            self.buffer.blit(surface,(0,0))
-            array = np.copy(surfarray.pixels3d(self.buffer).flatten())
+    # Pygame data writers
+    def pgBlit(self,surface):
+        # Copy the matrix as a numpy array
+        self.buffer = np.copy(surfarray.pixels3d(surface).flatten())
+
+        # Is there isn't already a burst task in the queue, create one
+        if not self.transmitter.burstInQueue.isSet():
+            self.transmitter.burstInQueue.set()
             self._send_noRcv([const.INTERLACED_BURST|const.DATA, array])
 
-    def blitColumn(self,surface,pos):
-        if not self.buffer.get_locked():
-            self.buffer.blit(surface,(pos,0))
-            self._send_noRcv([const.WRITE_COLUMN|const.DATA,
-                             pos,
-                             surfarray.pixels3d(self.buffer)[pos:pos+1]])
+    def pgBlitColumn(self,surface,pos):
+        # Copy the column to a numpy array
+        self.buffer[pos:pos+1] = np.copy(surfarray.pixels3d(surface).flatten())
 
-    def blitSection(self,surface,pos,lenght):
-        if not self.buffer.get_locked():
-            self.buffer.blit(surface,(pos,0))
-            self._send_noRcv([const.WRITE_SECTION|const.DATA,
-                              pos,
-                              lenght,
-                              surfarray.pixels3d(self.buffer)[pos:pos+lenght]])
+        # Is there isn't already a burst task in the queue, create a write_column task
+        if not self.transmitter.burstInQueue.isSet():
+            self._send_noRcv([const.WRITE_COLUMN|const.DATA, pos, self.buffer[pos:pos+1]])
+
+    def pgBlitSection(self,surface,pos,lenght):
+        # Copy the section to a numpy array
+        self.buffer[pos:pos+lenght] = np.copy(surfarray.pixels3d(surface).flatten())
+
+        # Is there isn't already a burst task in the queue, create a write_section task
+        if not self.transmitter.burstInQueue.isSet():
+            self._send_noRcv([const.WRITE_SECTION|const.DATA, pos, lenght,
+                              self.buffer[pos:pos+lenght]])

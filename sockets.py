@@ -4,16 +4,13 @@
 # ~ ABorgna
 #
 
-PY3 = False
+import constants as const
+
 BLUETOOTH_AVAILABLE = False
 SERIAL_AVAILABLE = False
 
 
-from sys import version_info as SYS_V_INFO
-if SYS_V_INFO[0] == 3: PY3 = True
-SYS_V_INFO = None
-
-if PY3:
+if const.PY3:
     try:
         from socket import AF_BLUETOOTH
         AF_BLUETOOTH = None
@@ -90,7 +87,7 @@ class BluetoothSocket(BaseSocket):
         self.close()
         self.asServer = asServer
         if self.asServer:
-            if PY3:
+            if const.PY3:
                 self.svSocket = socket.socket(socket.AF_BLUETOOTH,
                                               socket.SOCK_STREAM,
                                               socket.BTPROTO_RFCOMM)
@@ -101,7 +98,7 @@ class BluetoothSocket(BaseSocket):
             self.socket,clientinfo = self.svSocket.accept()
             self.svSocket.settimeout(timeout)
         else:
-            if PY3:
+            if const.PY3:
                 self.socket = socket.socket(socket.AF_BLUETOOTH,
                                             socket.SOCK_STREAM,
                                             socket.BTPROTO_RFCOMM)
@@ -138,14 +135,13 @@ class BluetoothSocket(BaseSocket):
         if type(r) == bytes:
             pass
         elif type(r) == int:
-            # r = bytes(chr(r&0xff),'utf-8')
             r = bytes([r&0xff])
         elif type(r) == list:
             r = bytes(r)
         elif type(r) == str:
             r = bytes(r,'ascii')
         else:
-            raise RuntimeError( "Serial data not supportted \n"
+            raise RuntimeError( "Serial data not supported \n"
                                 +"    Type: "+str(type(r))+"\n"
                                 +"    Value: "+str(r)
                                )
@@ -205,14 +201,13 @@ class SerialSocket(BaseSocket):
         if type(r) == bytes:
             pass
         elif type(r) == int:
-            # r = bytes(chr(r&0xff),'utf-8')
             r = bytes([r&0xff])
         elif type(r) == list:
             r = bytes(r)
         elif type(r) == str:
             r = bytes(r,'ascii')
         else:
-            raise RuntimeError( "Serial data not supportted \n"
+            raise RuntimeError( "Serial data not supported \n"
                                 +"    Type: "+str(type(r))+"\n"
                                 +"    Value: "+str(r)
                                )

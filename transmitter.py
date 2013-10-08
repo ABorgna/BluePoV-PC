@@ -4,6 +4,11 @@
 # ~ ABorgna
 #
 
+import threading
+import numpy as np
+from sys import stderr
+from time import sleep
+
 class Transmitter ( threading.Thread ):
     """"
     The asynchronous communication thread
@@ -14,6 +19,12 @@ class Transmitter ( threading.Thread ):
         # Status
         self.depth = 1          # bits per color
         self.height = 64        # column height
+
+        # Image buffer, the data to transmit
+        self.buffer = np.empty((480*height*3),dtype=np.uint8)
+
+        # Burst task already queued
+        self.burstInQueue = threading.Event()
 
         # Makes it stop when the program ends
         self.setDaemon(True)
@@ -63,7 +74,7 @@ class Transmitter ( threading.Thread ):
             # Wait for tasks
             task = self.outQ.get(block=True)
 
-            # Send everithing
+            # Send everything
             self._sendData(task)
 
             # Frees the references
@@ -92,16 +103,18 @@ class Transmitter ( threading.Thread ):
             token |= const.PRECODED
         self.socket.send(token)
 
-        # Data
 
         # Special
+
         if task[0] == const.PING|const.GET:
             self.socket.send(task[1])
         elif task[0] == const.STORE|const.SET:
             pass
         elif task[0] == const.CLEAN|const.SET:
             pass
+
         # Setters
+
         elif task[0] == const.HEIGHT|const.SET:
             self.height = task[1];
             self.socket.send(task[1] >> 8)
@@ -115,7 +128,9 @@ class Transmitter ( threading.Thread ):
         elif task[0] == const.TOTAL_WIDTH|const.SET:
             self.socket.send(task[1] >> 8)
             self.socket.send(task[1])
+
         # Getters
+
         elif task[0] == const.FPS|const.GET:
             pass
         elif task[0] == const.HEIGHT|const.GET:
@@ -129,38 +144,58 @@ class Transmitter ( threading.Thread ):
         elif task[0] == const.TOTAL_WIDTH|const.GET:
             self.socket.send(task[1] >> 8)
             self.socket.send(task[1])
+
         # Data
+
         elif task[0] == const.INTERLACED_BURST|const.DATA:
+            # There is not a burst task in the queue now
+            self.burstInQueue.clear()
+
+            # Copy the matrix in the internal buffer, so its not modified while encoding
+            self.buffer = nd.copy(task[1].flatten())
+
             # Encode the data
+            frame = self._arrangePixels(interlaced=True)
 
-            frame = self._arrangePixels(task[1],interlaced=True)
-
+            # Send it
             self.socket.send(frame)
         elif task[0] == const.WRITE_COLUMN|const.DATA:
             # Send column number
             self.socket.send(task[1])
+
+            # Copy the matrix in the internal buffer, so its not modified while encoding
+            self.buffer = nd.copy(task[2].flatten())
+
             # Encode the data
-            frame = self._arrangePixels(task[2])
+            frame = self._arrangePixels(lenght=1)
+
+            # Send it
             self.socket.send(frame)
         elif task[0] == const.WRITE_SECTION|const.DATA:
             # Send first column number
             self.socket.send(task[1])
-            # Send section lenght
+
+            # Send section length
             self.socket.send(task[2])
+
+            # Copy the matrix in the internal buffer, so its not modified while encoding
+            self.buffer = nd.copy(task[3].flatten())
+
             # Encode the data
-            frame = self._arrangePixels(task[3],lenght=task[2])
+            frame = self._arrangePixels(lenght=task[2])
+
+            # Send it
             self.socket.send(frame)
 
-    def _arrangePixels(self,array,lenght = 0, interlaced = False):
+    def _arrangePixels(self,lenght = 0, interlaced = False):
 
         if array.ndim not in (2,3):
             # Bad number of array dimensions
             raise ValueError("The dimensions are leaking!")
 
-        msg = array.flatten()
-        respLen = int(len(msg)*self.depth/8)
+        respLen = int(len(self.buffer)*self.depth/8)
         resp = np.empty((respLen),dtype=np.uint8)
 
-        encoder.encodeRGB3d(msg,resp,self.depth,self.height)
+        encoder.encodeRGB3d(self.buffer,resp,self.depth,self.height)
 
         return resp.tolist()

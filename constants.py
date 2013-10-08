@@ -1,5 +1,10 @@
 # Constants and defines
 
+PY3 = False
+from sys import version_info as SYS_V_INFO
+if SYS_V_INFO[0] >= 3: PY3 = True
+SYS_V_INFO = None
+
 #
 #   Token
 #
