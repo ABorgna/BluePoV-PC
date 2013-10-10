@@ -137,9 +137,9 @@ class BluetoothSocket(BaseSocket):
         elif type(r) == int:
             r = bytes([r&0xff])
         elif type(r) == list:
-            r = bytes(r)
+            r = bytearray(r)
         elif type(r) == str:
-            r = bytes(r,'ascii')
+            r = bytearray(r,'ascii')
         else:
             raise RuntimeError( "Serial data not supported \n"
                                 +"    Type: "+str(type(r))+"\n"
@@ -203,9 +203,9 @@ class SerialSocket(BaseSocket):
         elif type(r) == int:
             r = bytes([r&0xff])
         elif type(r) == list:
-            r = bytes(r)
+            r = bytearray(r)
         elif type(r) == str:
-            r = bytes(r,'ascii')
+            r = bytearray(r,'ascii')
         else:
             raise RuntimeError( "Serial data not supported \n"
                                 +"    Type: "+str(type(r))+"\n"

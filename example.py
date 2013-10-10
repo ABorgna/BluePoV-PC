@@ -22,8 +22,13 @@ port = input()
 if not port:
     port = "/dev/ttyUSB0"
 
+print ("Bauds? (default 115200)")
+bauds = input()
+if not bauds:
+    bauds = 115200
+
 sckt = bluePoV.SerialSocket()
-sckt.connect(port,115200)
+sckt.connect(port,bauds)
 
 driver = bluePoV.Driver(sckt,[x,y],depth=1)
 
