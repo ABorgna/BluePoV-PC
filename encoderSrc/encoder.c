@@ -2,28 +2,42 @@ void encodeRGB3d_C(unsigned char *in_array, unsigned char *out_array,
                    int height, int size, int bits, int bitsDone){
     /* Get the first n bits of a RGB bytes sequence,
     return another sequence ordered by bit number
-    (3 MSB bytes, 3 next-bit bytes).
+    (6 MSB bytes, 6 next-bit bytes).
+    The information for each uC is crossed, one byte for each and repeat.
     */
-    if(bits>=bitsDone || !bits || bits > 8)
+    if(bitsDone>=bits || !bits || bits > 8)
         return;
 
-    unsigned char *out_array_shifted = out_array+bitsDone;
+    unsigned char *out_array_shifted = out_array+bitsDone*6;
 
     unsigned char shift = 8-bits;
     unsigned char mask = 1 << shift;
-    unsigned int tempByte = 0;
+    unsigned int tempByteEven = 0;
+    unsigned int tempByteOdd = 0;
     unsigned int i;
 
-    for(i=0;i<size;i++){
+    for(i=0;i<size;){
 
-        tempByte <<= 1;
-        tempByte |= in_array[i] & mask;
+        tempByteEven <<= 1;
+        tempByteEven |= in_array[i] & mask;
+        i++;
 
-        if((i+1) %8 == 0){
-            tempByte >>= shift;
-            tempByte &= 0xFF;
-            out_array_shifted[i*bits/8] = tempByte;
-            tempByte = 0;
+        tempByteOdd <<= 1;
+        tempByteOdd |= in_array[i] & mask;
+        i++;
+
+        if(i %16 == 0){
+            tempByteEven >>= shift;
+            tempByteEven &= 0xFF;
+
+            tempByteOdd >>= shift;
+            tempByteOdd &= 0xFF;
+
+            out_array_shifted[(i/16-1)*bits] = tempByteEven;
+            out_array_shifted[(i/16+7)*bits] = tempByteOdd;
+
+            tempByteOdd = 0;
+            tempByteEven = 0;
         }
     }
 
@@ -39,14 +53,15 @@ void encodeRGB3dI_C(unsigned char *in_array, unsigned char *out_array,
     return another sequence ordered by bit number (MSB first),
     and with the even-column bits first, then the odd's (Interlaced).
     */
-    if(bits>=bitsDone || !bits || bits > 8)
+    if(bitsDone>=bits || !bits || bits > 8)
         return;
 
-    unsigned char *out_array_shifted = out_array+bitsDone;
+    unsigned char *out_array_shifted = out_array+bitsDone*6;
 
     unsigned char shift = 8-bits;
     unsigned char mask = 1 << shift;
-    unsigned int tempByte = 0;
+    unsigned int tempByteEven = 0;
+    unsigned int tempByteOdd = 0;
     unsigned int i;
 
     /* Interlaced transmission variables */
@@ -54,9 +69,10 @@ void encodeRGB3dI_C(unsigned char *in_array, unsigned char *out_array,
     const unsigned int columnBits = columnBytes * 8;
     unsigned int offset = 0;
     unsigned char isOdd = 1;
-    unsigned int index;
+    unsigned int indexEven;
+    unsigned int indexOdd;
 
-    for(i=0;i<size;i++){
+    for(i=0;i<size;){
 
         if(i % columnBits == 0){
             isOdd = !isOdd;
@@ -64,15 +80,29 @@ void encodeRGB3dI_C(unsigned char *in_array, unsigned char *out_array,
                 offset += columnBytes;
         }
 
-        tempByte <<= 1;
-        tempByte |= in_array[i] & mask;
+        tempByteEven <<= 1;
+        tempByteEven |= in_array[i] & mask;
+        i++;
 
-        if((i+1) %8 == 0){
-            tempByte >>= shift;
-            tempByte &= 0xff;
-            index = offset+(i*bitsDone/8)%columnBytes;
-            out_array_section[index] = tempByte;
-            tempByte = 0;
+        tempByteOdd <<= 1;
+        tempByteOdd |= in_array[i] & mask;
+        i++;
+
+        if(i %16 == 0){
+            tempByteEven >>= shift;
+            tempByteEven &= 0xFF;
+
+            tempByteOdd >>= shift;
+            tempByteOdd &= 0xFF;
+
+            indexEven = offset+((i/16-1)*bits)%columnBytes;
+            indexOdd = offset+((i/16+7)*bits)%columnBytes;
+
+            out_array_shifted[indexEven] = tempByteEven;
+            out_array_shifted[indexOdd] = tempByteOdd;
+
+            tempByteOdd = 0;
+            tempByteEven = 0;
         }
     }
 
