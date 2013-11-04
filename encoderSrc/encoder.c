@@ -12,33 +12,73 @@ void encodeRGB3d_C(unsigned char *in_array, unsigned char *out_array,
 
     unsigned char shift = 8-bits;
     unsigned char mask = 1 << shift;
-    unsigned int tempByteEven = 0;
     unsigned int tempByteOdd = 0;
+    unsigned int tempByteEven = 0;
+    unsigned int countO = 0;
+    unsigned int countE = 0;
     unsigned int i;
 
-    for(i=0;i<size;){
-
-        tempByteEven <<= 1;
-        tempByteEven |= in_array[i] & mask;
+    // This is slowly becoming a spaghetti
+    for(i=0;i<size;){   /* rgb */
+        tempByteOdd <<= 1;
+        tempByteOdd |= in_array[i+2] & mask;    /* b */
+        if(!(++countO %8)){
+            tempByteOdd >>= shift;
+            tempByteOdd &= 0xFF;
+            out_array_shifted[((countO/8-1)*2)*bits] = tempByteOdd;
+            tempByteOdd = 0;
+        }
         i++;
 
         tempByteOdd <<= 1;
-        tempByteOdd |= in_array[i] & mask;
-        i++;
-
-        if(i %16 == 0){
-            tempByteEven >>= shift;
-            tempByteEven &= 0xFF;
-
+        tempByteOdd |= in_array[i] & mask;      /* g */
+        if(!(++countO %8)){
             tempByteOdd >>= shift;
             tempByteOdd &= 0xFF;
-
-            out_array_shifted[(i/16-1)*bits] = tempByteEven;
-            out_array_shifted[(i/16+7)*bits] = tempByteOdd;
-
+            out_array_shifted[((countO/8-1)*2)*bits] = tempByteOdd;
             tempByteOdd = 0;
+        }
+        i++;
+
+        tempByteOdd <<= 1;
+        tempByteOdd |= in_array[i-2] & mask;    /* r */
+        if(!(++countO %8)){
+            tempByteOdd >>= shift;
+            tempByteOdd &= 0xFF;
+            out_array_shifted[((countO/8-1)*2)*bits] = tempByteOdd;
+            tempByteOdd = 0;
+        }
+        i++;
+
+        tempByteEven <<= 1;
+        tempByteEven |= in_array[i+2] & mask;   /* b */
+        if(!(++countE %8)){
+            tempByteEven >>= shift;
+            tempByteEven &= 0xFF;
+            out_array_shifted[((countE/8-1)*2+1)*bits] = tempByteEven;
             tempByteEven = 0;
         }
+        i++;
+
+        tempByteEven <<= 1;
+        tempByteEven |= in_array[i] & mask;     /* g */
+        if(!(++countE %8)){
+            tempByteEven >>= shift;
+            tempByteEven &= 0xFF;
+            out_array_shifted[((countE/8-1)*2+1)*bits] = tempByteEven;
+            tempByteEven = 0;
+        }
+        i++;
+
+        tempByteEven <<= 1;
+        tempByteEven |= in_array[i-2] & mask;   /* r */
+        if(!(++countE %8)){
+            tempByteEven >>= shift;
+            tempByteEven &= 0xFF;
+            out_array_shifted[((countE/8-1)*2+1)*bits] = tempByteEven;
+            tempByteEven = 0;
+        }
+        i++;
     }
 
     /* Yay, recursion! */
@@ -52,7 +92,7 @@ void encodeRGB3dI_C(unsigned char *in_array, unsigned char *out_array,
     /* Get the first n bits of a RGB bytes sequence,
     return another sequence ordered by bit number (MSB first),
     and with the even-column bits first, then the odd's (Interlaced).
-    */
+    *
     if(bitsDone>=bits || !bits || bits > 8)
         return;
 
@@ -64,7 +104,7 @@ void encodeRGB3dI_C(unsigned char *in_array, unsigned char *out_array,
     unsigned int tempByteOdd = 0;
     unsigned int i;
 
-    /* Interlaced transmission variables */
+    /* Interlaced transmission variables *
     const unsigned int columnBytes = height * 3 * bits / 8;
     const unsigned int columnBits = columnBytes * 8;
     unsigned int offset = 0;
@@ -106,8 +146,10 @@ void encodeRGB3dI_C(unsigned char *in_array, unsigned char *out_array,
         }
     }
 
-    /* Yay, recursion! */
+    /* Yay, recursion! *
     if(bits>1){
         encodeRGB3dI_C(in_array,out_array,height,size,bits,bitsDone+1);
     }
+    /**/
+    ;
 }

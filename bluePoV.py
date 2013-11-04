@@ -77,10 +77,10 @@ class Driver(object):
             r = self.transmitter.recv()
             if r == None:
                 if not retries:
-                    stderr.write(errorStr+", couldn't get response")
+                    stderr.write(errorStr+", couldn't get response\n")
                     return None
             elif 0xffff > r >= 0xff00:
-                stderr.write(errorStr+", {:#x}".format(r))
+                stderr.write(errorStr+", {:#x}\n".format(r))
                 return -r
             else:
                 return r
@@ -95,8 +95,8 @@ class Driver(object):
     # Special commands
 
     def ping(self):
-        r = self._send((const.PING|const.GET,0x55),"Error when pinging")
-        return r == 0x55
+        r = self._send((const.PING|const.GET),"Error when pinging")
+        return r != None
 
     def store(self):
         self._send((const.STORE|const.SET),"Error storing the display in ROM")
@@ -154,7 +154,7 @@ class Driver(object):
         # Is there isn't already a burst task in the queue, create one
         if not self.transmitter.burstInQueue.isSet():
             self.transmitter.burstInQueue.set()
-            self._send_noRcv([const.INTERLACED_BURST|const.DATA, self.buffer])
+            self._send_noRcv([const.BURST|const.DATA, self.buffer])
 
     def pgBlitColumn(self,surface,pos):
         # Copy the column to a numpy array
