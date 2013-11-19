@@ -6,7 +6,7 @@ if not bluePoV.const.PY3:
     input = raw_input
 
 # Varia el color regularmente
-x,y = (480,64)
+x,y = (480,32)
 pendiente = 256
 
 # Pygame inits & variables

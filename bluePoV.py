@@ -56,9 +56,12 @@ class Driver(object):
         self.transmitter.start()
 
         # Set the resolution on the device
-        self.setTotalWidth(res[0])
+        #self.setTotalWidth(res[0])
         self.setResolution(res)
         self.setDepth(depth)
+
+        # Go
+        self.syncro()
 
     def _send(self,packet,errorStr="Transmission error",retries=0):
         """
@@ -98,8 +101,8 @@ class Driver(object):
         r = self._send((const.PING|const.GET),"Error when pinging")
         return r != None
 
-    def store(self):
-        self._send((const.STORE|const.SET),"Error storing the display in ROM")
+    def syncro(self):
+        self._send((const.STORE|const.SET),"Error: Snchronization went bad :(")
 
     def clean(self):
         self._send((const.CLEAN|const.SET),"Error cleaning the display")
@@ -128,6 +131,9 @@ class Driver(object):
     def setTotalWidth(self,width):
         self._send((const.TOTAL_WIDTH|const.SET,width),"Error setting the total width")
 
+    def setSpeed(self,sp):
+        self._send((const.SPEED|const.SET,sp),"Error setting the speed")
+
     # Variable getters
 
     def getFPS(self):
@@ -145,6 +151,9 @@ class Driver(object):
 
     def getTotalWidth(self):
         return self._send((const.TOTAL_WIDTH|const.GET),"Error getting the total width")
+
+    def getSpeed(self):
+        return self._send((const.SPEED|const.GET),"Error getting the speed")
 
     # Pygame data writers
     def pgBlit(self,surface):
