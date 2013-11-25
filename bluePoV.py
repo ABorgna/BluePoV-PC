@@ -64,6 +64,9 @@ class Driver(object):
         # Go
         self.syncro()
 
+        # Go
+        self.syncro()
+
     def _send(self,packet,errorStr="Transmission error",retries=0):
         """
         Sends the packet
@@ -100,11 +103,19 @@ class Driver(object):
 
     def ping(self):
 <<<<<<< HEAD
+<<<<<<< HEAD
         r = self._send((const.PING|const.GET,),"Error when pinging")
         return r == 0x55
 
     def store(self):
         self._send((const.STORE|const.SET,),"Error storing the display in ROM")
+=======
+        r = self._send((const.PING|const.GET),"Error when pinging")
+        return r != None
+
+    def syncro(self):
+        self._send((const.STORE|const.SET),"Error: Snchronization went bad :(")
+>>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
 =======
         r = self._send((const.PING|const.GET),"Error when pinging")
         return r != None
@@ -141,11 +152,16 @@ class Driver(object):
         self._send((const.TOTAL_WIDTH|const.SET,width),"Error setting the total width")
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     def setSpeed(self,s):
         self._send((const.SPEED|const.SET,s),"Error setting the speed")
 
     def setDimm(self,s):
         self._send((const.DIMM|const.SET,s),"Error setting the dimm")
+=======
+    def setSpeed(self,sp):
+        self._send((const.SPEED|const.SET,sp),"Error setting the speed")
+>>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
 =======
     def setSpeed(self,sp):
         self._send((const.SPEED|const.SET,sp),"Error setting the speed")
@@ -174,6 +190,9 @@ class Driver(object):
 
     def getDimm(self):
         return self._send((const.DIMM|const.GET,),"Error getting the dimm")
+
+    def getSpeed(self):
+        return self._send((const.SPEED|const.GET),"Error getting the speed")
 
     def getSpeed(self):
         return self._send((const.SPEED|const.GET),"Error getting the speed")
