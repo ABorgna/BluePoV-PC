@@ -56,10 +56,13 @@ class Driver(object):
         self.transmitter.start()
 
         # Set the resolution on the device
-        self.setTotalWidth(res[0])
+        #self.setTotalWidth(res[0])
         self.setResolution(res)
         self.setDepth(depth)
         self.setDimm(0)
+
+        # Go
+        self.syncro()
 
     def _send(self,packet,errorStr="Transmission error",retries=0):
         """
@@ -78,10 +81,10 @@ class Driver(object):
             r = self.transmitter.recv()
             if r == None:
                 if not retries:
-                    stderr.write(errorStr+", couldn't get response")
+                    stderr.write(errorStr+", couldn't get response\n")
                     return None
             elif 0xffff > r >= 0xff00:
-                stderr.write(errorStr+", {:#x}".format(r))
+                stderr.write(errorStr+", {:#x}\n".format(r))
                 return -r
             else:
                 return r
@@ -96,11 +99,19 @@ class Driver(object):
     # Special commands
 
     def ping(self):
+<<<<<<< HEAD
         r = self._send((const.PING|const.GET,),"Error when pinging")
         return r == 0x55
 
     def store(self):
         self._send((const.STORE|const.SET,),"Error storing the display in ROM")
+=======
+        r = self._send((const.PING|const.GET),"Error when pinging")
+        return r != None
+
+    def syncro(self):
+        self._send((const.STORE|const.SET),"Error: Snchronization went bad :(")
+>>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
 
     def clean(self):
         self._send((const.CLEAN|const.SET,),"Error cleaning the display")
@@ -129,11 +140,16 @@ class Driver(object):
     def setTotalWidth(self,width):
         self._send((const.TOTAL_WIDTH|const.SET,width),"Error setting the total width")
 
+<<<<<<< HEAD
     def setSpeed(self,s):
         self._send((const.SPEED|const.SET,s),"Error setting the speed")
 
     def setDimm(self,s):
         self._send((const.DIMM|const.SET,s),"Error setting the dimm")
+=======
+    def setSpeed(self,sp):
+        self._send((const.SPEED|const.SET,sp),"Error setting the speed")
+>>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
 
     # Variable getters
 
@@ -158,6 +174,9 @@ class Driver(object):
 
     def getDimm(self):
         return self._send((const.DIMM|const.GET,),"Error getting the dimm")
+
+    def getSpeed(self):
+        return self._send((const.SPEED|const.GET),"Error getting the speed")
 
     # Pygame data writers
     def pgBlit(self,surface):

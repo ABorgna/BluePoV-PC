@@ -72,13 +72,17 @@ class Transmitter ( threading.Thread ):
         while True:
 
             # Check if connected, retry and warn every 1s
-            tries = 1/self.socket.timeout
+            tries = 1
+            if self.socket.timeout:
+                tries = 1.0/self.socket.timeout
             while not self.socket.isConnected():
                 self.socket.reconnect()
                 sleep(0.1)
                 tries -= 1
-                if not tries:
-                    tries = 1/self.socket.timeout
+                if tries <= 0:
+                    tries = 1
+                    if self.socket.timeout:
+                        tries = 1.0/self.socket.timeout
                     stderr.write("BluePoV not responding...")
 
             # Wait for tasks
@@ -102,11 +106,19 @@ class Transmitter ( threading.Thread ):
                 response = r << 8
             r = self.socket.recv()
             if r != None:
+<<<<<<< HEAD
                 if response != None:
                     response |= r
                 else:
                     response = r
+=======
+                response = response|r if response != None else r
+>>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
             self.inQ.put(response)
+            if response != None:
+                print('resp = '+hex(response))
+            else:
+                print('resp = None')
 
             print('res! '+str(response))
 
@@ -122,7 +134,6 @@ class Transmitter ( threading.Thread ):
         if token & const.DATA:
             token |= const.PRECODED
         self.socket.send(token)
-
 
         # Special
 
@@ -173,8 +184,12 @@ class Transmitter ( threading.Thread ):
 
         # Data
 
+<<<<<<< HEAD
         elif task[0] == const.BURST|const.DATA \
             or task[0] == const.INTERLACED_BURST|const.DATA:
+=======
+        elif task[0] == const.BURST|const.DATA:
+>>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
             # There is not a burst task in the queue now
             self.burstInQueue.clear()
 
@@ -182,7 +197,7 @@ class Transmitter ( threading.Thread ):
             self.buffer = np.copy(task[1].flatten())
 
             # Encode the data
-            frame = self._arrangePixels(interlaced=True)
+            frame = self._arrangePixels(interlaced=False)
 
             print('Data:')
             print(frame[:24])
