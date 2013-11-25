@@ -59,6 +59,7 @@ class Driver(object):
         self.setTotalWidth(res[0])
         self.setResolution(res)
         self.setDepth(depth)
+        self.setDimm(0)
 
     def _send(self,packet,errorStr="Transmission error",retries=0):
         """
@@ -95,14 +96,14 @@ class Driver(object):
     # Special commands
 
     def ping(self):
-        r = self._send((const.PING|const.GET,0x55),"Error when pinging")
+        r = self._send((const.PING|const.GET,),"Error when pinging")
         return r == 0x55
 
     def store(self):
-        self._send((const.STORE|const.SET),"Error storing the display in ROM")
+        self._send((const.STORE|const.SET,),"Error storing the display in ROM")
 
     def clean(self):
-        self._send((const.CLEAN|const.SET),"Error cleaning the display")
+        self._send((const.CLEAN|const.SET,),"Error cleaning the display")
 
     # Variable setters
 
@@ -128,23 +129,35 @@ class Driver(object):
     def setTotalWidth(self,width):
         self._send((const.TOTAL_WIDTH|const.SET,width),"Error setting the total width")
 
+    def setSpeed(self,s):
+        self._send((const.SPEED|const.SET,s),"Error setting the speed")
+
+    def setDimm(self,s):
+        self._send((const.DIMM|const.SET,s),"Error setting the dimm")
+
     # Variable getters
 
     def getFPS(self):
-        return self._send((const.FPS|const.GET),"Error getting the fps")
+        return self._send((const.FPS|const.GET,),"Error getting the fps")
 
     def getResolution(self):
         # Height
-        h = self._send((const.HEIGHT|const.GET),"Error getting the resolution")
+        h = self._send((const.HEIGHT|const.GET,),"Error getting the resolution")
         # Width
-        w =self._send((const.WIDTH|const.GET),"Error getting the resolution")
+        w =self._send((const.WIDTH|const.GET,),"Error getting the resolution")
         return (w,h)
 
     def getDepth(self):
-        return self._send((const.DEPTH|const.GET),"Error getting the depth")
+        return self._send((const.DEPTH|const.GET,),"Error getting the depth")
 
     def getTotalWidth(self):
-        return self._send((const.TOTAL_WIDTH|const.GET),"Error getting the total width")
+        return self._send((const.TOTAL_WIDTH|const.GET,),"Error getting the total width")
+
+    def getSpeed(self):
+        return self._send((const.SPEED|const.GET,),"Error getting the speed")
+
+    def getDimm(self):
+        return self._send((const.DIMM|const.GET,),"Error getting the dimm")
 
     # Pygame data writers
     def pgBlit(self,surface):
@@ -154,7 +167,7 @@ class Driver(object):
         # Is there isn't already a burst task in the queue, create one
         if not self.transmitter.burstInQueue.isSet():
             self.transmitter.burstInQueue.set()
-            self._send_noRcv([const.INTERLACED_BURST|const.DATA, self.buffer])
+            self._send_noRcv([const.BURST|const.DATA, self.buffer])
 
     def pgBlitColumn(self,surface,pos):
         # Copy the column to a numpy array
@@ -172,3 +185,4 @@ class Driver(object):
         if not self.transmitter.burstInQueue.isSet():
             self._send_noRcv([const.WRITE_SECTION|const.DATA, pos, lenght,
                               self.buffer[pos:pos+lenght]])
+        self.setTotalWidth(res[0])

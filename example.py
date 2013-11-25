@@ -6,7 +6,7 @@ if not bluePoV.const.PY3:
     input = raw_input
 
 # Varia el color regularmente
-x,y = (480,64)
+x,y = (480,32)
 pendiente = 4
 
 # Pygame inits & variables
@@ -23,7 +23,7 @@ if not port:
     port = "/dev/ttyUSB0"
 
 sckt = bluePoV.SerialSocket()
-sckt.connect(port,115200)
+sckt.connect(port,19200,timeout=1)
 
 driver = bluePoV.Driver(sckt,[x,y],depth=1)
 

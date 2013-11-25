@@ -10,7 +10,7 @@ import encoderSrc.encoder as encoder
 import threading
 import numpy as np
 from sys import stderr
-from time import sleep
+from time import sleep, time
 
 if const.PY3:
     import queue
@@ -26,7 +26,8 @@ class Transmitter ( threading.Thread ):
 
         # Status
         self.depth = 1          # bits per color
-        self.height = 64        # column height
+        self.height = 32        # column height
+        self.lastBlitTime = 0   # in seconds
 
         # Image buffer, the data to transmit
         self.buffer = np.empty((480*self.height*3),dtype=np.uint8)
@@ -69,6 +70,7 @@ class Transmitter ( threading.Thread ):
         """
 
         while True:
+
             # Check if connected, retry and warn every 1s
             tries = 1/self.socket.timeout
             while not self.socket.isConnected():
@@ -81,6 +83,11 @@ class Transmitter ( threading.Thread ):
 
             # Wait for tasks
             task = self.outQ.get(block=True)
+
+            # Timeout for blitting
+            while self.lastBlitTime + 5 > time():
+                sleep(0.01)
+                pass
 
             # Send everything
             self._sendData(task)
@@ -95,8 +102,13 @@ class Transmitter ( threading.Thread ):
                 response = r << 8
             r = self.socket.recv()
             if r != None:
-                response |= r
+                if response != None:
+                    response |= r
+                else:
+                    response = r
             self.inQ.put(response)
+
+            print('res! '+str(response))
 
             # Mark as done and wait another
             self.outQ.task_done()
@@ -115,7 +127,7 @@ class Transmitter ( threading.Thread ):
         # Special
 
         if task[0] == const.PING|const.GET:
-            self.socket.send(task[1])
+            pass
         elif task[0] == const.STORE|const.SET:
             pass
         elif task[0] == const.CLEAN|const.SET:
@@ -136,26 +148,33 @@ class Transmitter ( threading.Thread ):
         elif task[0] == const.TOTAL_WIDTH|const.SET:
             self.socket.send(task[1] >> 8)
             self.socket.send(task[1])
+        elif task[0] == const.SPEED|const.SET:
+            self.socket.send(task[1] >> 8)
+            self.socket.send(task[1])
+        elif task[0] == const.DIMM|const.SET:
+            self.socket.send(task[1])
 
         # Getters
 
         elif task[0] == const.FPS|const.GET:
             pass
         elif task[0] == const.HEIGHT|const.GET:
-            self.socket.send(task[1] >> 8)
-            self.socket.send(task[1])
+            pass
         elif task[0] == const.WIDTH|const.GET:
-            self.socket.send(task[1] >> 8)
-            self.socket.send(task[1])
+            pass
         elif task[0] == const.DEPTH|const.GET:
-            self.socket.send(task[1])
+            pass
         elif task[0] == const.TOTAL_WIDTH|const.GET:
-            self.socket.send(task[1] >> 8)
-            self.socket.send(task[1])
+            pass
+        elif task[0] == const.SPEED|const.GET:
+            pass
+        elif task[0] == const.DIMM|const.GET:
+            pass
 
         # Data
 
-        elif task[0] == const.INTERLACED_BURST|const.DATA:
+        elif task[0] == const.BURST|const.DATA \
+            or task[0] == const.INTERLACED_BURST|const.DATA:
             # There is not a burst task in the queue now
             self.burstInQueue.clear()
 
@@ -165,8 +184,16 @@ class Transmitter ( threading.Thread ):
             # Encode the data
             frame = self._arrangePixels(interlaced=True)
 
+            print('Data:')
+            print(frame[:24])
+            print('len:')
+            l = len(frame)
+            print(str(l)+' ('+str(l/12)+'*12)')
+            print()
+
             # Send it
             self.socket.send(frame)
+
         elif task[0] == const.WRITE_COLUMN|const.DATA:
             # Send column number
             self.socket.send(task[1])
@@ -194,6 +221,8 @@ class Transmitter ( threading.Thread ):
 
             # Send it
             self.socket.send(frame)
+
+            self.lastBlitTime = time()
 
     def _arrangePixels(self,lenght = 0, interlaced = False):
 

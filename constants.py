@@ -34,6 +34,8 @@ CLEAN = 0
 STORE = 1
 
 # Get and set
+SPEED = 2
+DIMM = 3
 HEIGHT = 4
 WIDTH = 5
 DEPTH = 6
