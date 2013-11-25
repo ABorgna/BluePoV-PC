@@ -7,15 +7,7 @@ if not bluePoV.const.PY3:
 
 # Varia el color regularmente
 x,y = (480,32)
-<<<<<<< HEAD
-<<<<<<< HEAD
 pendiente = 4
-=======
-pendiente = 256
->>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
-=======
-pendiente = 256
->>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
 
 # Pygame inits & variables
 pygame.init()
@@ -37,15 +29,7 @@ if not bauds:
     bauds = 115200
 
 sckt = bluePoV.SerialSocket()
-<<<<<<< HEAD
-<<<<<<< HEAD
-sckt.connect(port,19200,timeout=1)
-=======
 sckt.connect(port,bauds,timeout=0.01)
->>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
-=======
-sckt.connect(port,bauds,timeout=0.01)
->>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
 
 driver = bluePoV.Driver(sckt,[x,y],depth=1)
 

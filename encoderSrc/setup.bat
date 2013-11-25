@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
 @echo off
 echo === Python 2 ===
 
@@ -14,9 +12,3 @@ python3 setup.py build_ext -i
 
 echo .
 pause
-=======
-python setup.py build_ext -i
->>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
-=======
-python setup.py build_ext -i
->>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7

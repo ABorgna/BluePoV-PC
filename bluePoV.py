@@ -102,27 +102,11 @@ class Driver(object):
     # Special commands
 
     def ping(self):
-<<<<<<< HEAD
-<<<<<<< HEAD
         r = self._send((const.PING|const.GET,),"Error when pinging")
-        return r == 0x55
-
-    def store(self):
-        self._send((const.STORE|const.SET,),"Error storing the display in ROM")
-=======
-        r = self._send((const.PING|const.GET),"Error when pinging")
         return r != None
 
     def syncro(self):
-        self._send((const.STORE|const.SET),"Error: Snchronization went bad :(")
->>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
-=======
-        r = self._send((const.PING|const.GET),"Error when pinging")
-        return r != None
-
-    def syncro(self):
-        self._send((const.STORE|const.SET),"Error: Snchronization went bad :(")
->>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
+        self._send((const.STORE|const.SET,),"Error: Snchronization went bad :(")
 
     def clean(self):
         self._send((const.CLEAN|const.SET,),"Error cleaning the display")
@@ -151,21 +135,11 @@ class Driver(object):
     def setTotalWidth(self,width):
         self._send((const.TOTAL_WIDTH|const.SET,width),"Error setting the total width")
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     def setSpeed(self,s):
         self._send((const.SPEED|const.SET,s),"Error setting the speed")
 
     def setDimm(self,s):
         self._send((const.DIMM|const.SET,s),"Error setting the dimm")
-=======
-    def setSpeed(self,sp):
-        self._send((const.SPEED|const.SET,sp),"Error setting the speed")
->>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
-=======
-    def setSpeed(self,sp):
-        self._send((const.SPEED|const.SET,sp),"Error setting the speed")
->>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
 
     # Variable getters
 
@@ -192,7 +166,7 @@ class Driver(object):
         return self._send((const.DIMM|const.GET,),"Error getting the dimm")
 
     def getSpeed(self):
-        return self._send((const.SPEED|const.GET),"Error getting the speed")
+        return self._send((const.SPEED|const.GET,),"Error getting the speed")
 
     def getSpeed(self):
         return self._send((const.SPEED|const.GET),"Error getting the speed")

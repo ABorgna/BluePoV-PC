@@ -106,28 +106,12 @@ class Transmitter ( threading.Thread ):
                 response = r << 8
             r = self.socket.recv()
             if r != None:
-<<<<<<< HEAD
-<<<<<<< HEAD
-                if response != None:
-                    response |= r
-                else:
-                    response = r
-=======
                 response = response|r if response != None else r
->>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
-=======
-                response = response|r if response != None else r
->>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
             self.inQ.put(response)
             if response != None:
                 print('resp = '+hex(response))
             else:
                 print('resp = None')
-<<<<<<< HEAD
-
-            print('res! '+str(response))
-=======
->>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
 
             # Mark as done and wait another
             self.outQ.task_done()
@@ -191,16 +175,8 @@ class Transmitter ( threading.Thread ):
 
         # Data
 
-<<<<<<< HEAD
-<<<<<<< HEAD
         elif task[0] == const.BURST|const.DATA \
             or task[0] == const.INTERLACED_BURST|const.DATA:
-=======
-        elif task[0] == const.BURST|const.DATA:
->>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
-=======
-        elif task[0] == const.BURST|const.DATA:
->>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
             # There is not a burst task in the queue now
             self.burstInQueue.clear()
 
@@ -209,7 +185,6 @@ class Transmitter ( threading.Thread ):
 
             # Encode the data
             frame = self._arrangePixels(interlaced=False)
-<<<<<<< HEAD
 
             print('Data:')
             print(frame[:24])
@@ -217,8 +192,6 @@ class Transmitter ( threading.Thread ):
             l = len(frame)
             print(str(l)+' ('+str(l/12)+'*12)')
             print()
-=======
->>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
 
             # Send it
             self.socket.send(frame)

@@ -34,16 +34,8 @@ CLEAN = 0
 STORE = 1
 
 # Get and set
-<<<<<<< HEAD
-<<<<<<< HEAD
 SPEED = 2
 DIMM = 3
-=======
-SPEED = 4
->>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
-=======
-SPEED = 4
->>>>>>> 3686ceae591e20929b9406b796a0a79d30838ad7
 HEIGHT = 4
 WIDTH = 5
 DEPTH = 6
