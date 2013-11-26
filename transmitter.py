@@ -153,7 +153,7 @@ class Transmitter ( threading.Thread ):
         elif task[0] == const.SPEED|const.SET:
             self.socket.send(task[1] >> 8)
             self.socket.send(task[1])
-        elif task[0] == const.DIMM|const.SET:
+        elif task[0] == const.DIM|const.SET:
             self.socket.send(task[1])
 
         # Getters
@@ -170,7 +170,7 @@ class Transmitter ( threading.Thread ):
             pass
         elif task[0] == const.SPEED|const.GET:
             pass
-        elif task[0] == const.DIMM|const.GET:
+        elif task[0] == const.DIM|const.GET:
             pass
 
         # Data

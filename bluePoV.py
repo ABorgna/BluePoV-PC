@@ -59,7 +59,7 @@ class Driver(object):
         #self.setTotalWidth(res[0])
         self.setResolution(res)
         self.setDepth(depth)
-        self.setDimm(0)
+        self.setDim(0)
 
         # Go
         self.syncro()
@@ -138,7 +138,7 @@ class Driver(object):
     def setSpeed(self,s):
         self._send((const.SPEED|const.SET,s),"Error setting the speed")
 
-    def setDimm(self,s):
+    def setDim(self,s):
         self._send((const.DIMM|const.SET,s),"Error setting the dimm")
 
     # Variable getters
@@ -162,7 +162,7 @@ class Driver(object):
     def getSpeed(self):
         return self._send((const.SPEED|const.GET,),"Error getting the speed")
 
-    def getDimm(self):
+    def getDim(self):
         return self._send((const.DIMM|const.GET,),"Error getting the dimm")
 
     def getSpeed(self):
